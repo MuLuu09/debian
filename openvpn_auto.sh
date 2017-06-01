@@ -90,7 +90,7 @@ chmod 600 /etc/openvpn/client-key.pem
 openssl req -new -key /etc/openvpn/client-key.pem -out /etc/openvpn/client-csr.pem -subj /CN=OpenVPN-Client/ > /dev/null 2>&1
 openssl x509 -req -in /etc/openvpn/client-csr.pem -out /etc/openvpn/client-cert.pem -CA /etc/openvpn/ca.pem -CAkey /etc/openvpn/ca-key.pem -days 36525 > /dev/null 2>&1
 
-cat > /etc/openvpn/client.ovpn <<EOF
+cat > /etc/openvpn/tcp56.ovpn <<EOF
 client
 nobind
 dev tun
@@ -131,11 +131,19 @@ EOF
 sysctl -w net.ipv4.ip_forward=1
 sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
 wget -O /etc/iptables.conf http://raw.github.com/mappakkoe09/y/debian7/iptables.conf
-sed -i '$ i\iptables-restore < /etc/iptables.conf' /etc/rc.local myip2="s/ipserver/$MYIP/g";
-sed -i $myip2 /etc/iptables.conf; iptables-restore < /etc/iptables.conf
+sed -i '$ i\iptables-restore < /etc/iptables.conf' /etc/rc.local 
+
+myip2="s/ipserver/$MYIP/g";
+sed -i $myip2 /etc/iptables.conf; 
+
+iptables-restore < /etc/iptables.conf
+
+cp /etc/openvpn/tcp56.ovpn /home/vps/public_html/tcp56.ovpn
+sed -i $myip2 /home/vps/public_html/tcp56.ovpn
+sed -i "s/ports/55/" /home/vps/public_html/tcp56.ovpn
 
 # Restart Service
 ok "❯❯❯ service openvpn restart"
 service openvpn restart > /dev/null 2>&1
-ok "❯❯❯ Your client config is available at /etc/openvpn/client.ovpn"
+ok "❯❯❯ Your client config is available at http://$MYIP:81/tcp56.ovpn"
 ok "❯❯❯ All done!"
